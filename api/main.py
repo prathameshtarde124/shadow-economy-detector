@@ -169,20 +169,18 @@ async def get_txn_log(limit: int = 50):
     return {"count": len(log), "transactions": list(reversed(log))}
 
 
-@app.websocket("/stream")
-async def websocket_stream(ws: WebSocket):
-    """WebSocket: receive real-time transaction events."""
-    await manager.connect(ws)
-    try:
-        while True:
-            await ws.receive_text()   # keep connection alive
-    except WebSocketDisconnect:
-        manager.disconnect(ws)
-
-
 # ─────────────────────────────────────────────
-#  Background simulator (optional demo mode)
+#  Simulation Control
 # ─────────────────────────────────────────────
+SIM_RUNNING = True
+
+@app.post("/toggle-simulation")
+async def toggle_sim():
+    """Toggle the background simulator on/off."""
+    global SIM_RUNNING
+    SIM_RUNNING = not SIM_RUNNING
+    return {"running": SIM_RUNNING}
+
 ALL_ENTITIES = (
     [f"ACC-{1000+i}" for i in range(1, 4)]  # cluster A
     + [f"ACC-{2000+i}" for i in [1, 2, 4]]  # cluster B
@@ -193,6 +191,10 @@ ALL_ENTITIES = (
 async def _simulate():
     """Continuously emit simulated transactions."""
     while True:
+        if not SIM_RUNNING:
+            await asyncio.sleep(1.0)
+            continue
+
         sender   = random.choice(ALL_ENTITIES)
         receiver = random.choice([e for e in ALL_ENTITIES if e != sender])
         amount   = round(random.lognormvariate(7, 1.2), 2)
@@ -217,4 +219,4 @@ async def startup():
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

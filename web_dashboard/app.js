@@ -5,8 +5,8 @@
  * back to simulation only if API is offline.
  */
 
-const API_BASE = "http://localhost:8000";
-const WS_URL   = "ws://localhost:8000/stream";
+const API_BASE = "http://localhost:8001";
+const WS_URL   = "ws://localhost:8001/stream";
 
 // ─── State ───────────────────────────────────────
 let cy;
@@ -71,6 +71,32 @@ function bindButtons() {
     document.getElementById("history-modal").addEventListener("click", (e) => {
         if (e.target === document.getElementById("history-modal"))
             document.getElementById("history-modal").classList.add("hidden");
+    });
+
+    // ── Simulation Pause/Resume ──
+    let isPausedStatus = false;
+    document.getElementById("pause-btn").addEventListener("click", async () => {
+        try {
+            const res = await fetch(`${API_BASE}/toggle-simulation`, { method: "POST" });
+            const data = await res.json();
+            isPausedStatus = !data.running;
+            
+            const icon = document.getElementById("pause-icon");
+            icon.setAttribute("data-lucide", isPausedStatus ? "play" : "pause");
+            
+            const liveBadge = document.querySelector(".live-badge");
+            if (isPausedStatus) {
+                liveBadge.style.color = "var(--text-muted)";
+                document.querySelector(".live-dot").style.background = "var(--text-muted)";
+                document.querySelector(".live-dot").style.animation = "none";
+            } else {
+                liveBadge.style.color = "var(--accent-green)";
+                document.querySelector(".live-dot").style.background = "var(--accent-green)";
+                document.querySelector(".live-dot").style.animation = "pulse-dot 1.5s infinite";
+            }
+            
+            lucide.createIcons();
+        } catch (e) { console.error("Could not toggle simulation", e); }
     });
 
     // ── Inject Fraud ──
