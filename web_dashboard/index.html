@@ -1,144 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShadowScore | Precision Fraud Monitoring</title>
+    <meta name="description" content="Real-time fraud detection and behavioral analysis dashboard powered by ShadowScore engine.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Cytoscape + dagre layout (no cola needed) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#050B15] text-slate-300 font-['Inter'] overflow-hidden">
-    <div class="flex h-screen w-full">
-        <!-- Sidebar -->
-        <aside class="w-16 border-r border-slate-800/50 flex flex-col items-center py-6 gap-8 bg-[#02060C]">
-            <div class="p-2 bg-blue-600/10 rounded-lg text-blue-500 mb-4">
-                <i data-lucide="shield-check" class="w-8 h-8"></i>
-            </div>
-            <nav class="flex flex-col gap-6 text-slate-500">
-                <a href="#" class="p-2 hover:text-blue-400 transition-colors text-blue-500 border-l-2 border-blue-500 bg-blue-500/5"><i data-lucide="layout-dashboard"></i></a>
-                <a href="#" class="p-2 hover:text-blue-400 transition-colors"><i data-lucide="users"></i></a>
-                <a href="#" class="p-2 hover:text-blue-400 transition-colors"><i data-lucide="activity"></i></a>
-                <a href="#" class="p-2 hover:text-blue-400 transition-colors"><i data-lucide="network"></i></a>
-            </nav>
-            <div class="mt-auto flex flex-col gap-6 text-slate-600">
-                <a href="#" class="p-2 hover:text-slate-300"><i data-lucide="settings"></i></a>
-                <a href="#" class="p-2 hover:text-slate-300"><i data-lucide="log-out"></i></a>
-            </div>
-        </aside>
+<body id="app-body">
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col min-w-0">
-            <!-- Top Header -->
-            <header class="h-14 border-b border-slate-800/50 flex items-center px-6 justify-between bg-[#02060C]">
-                <div class="flex items-center gap-4">
-                    <h1 class="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Precision Fraud Monitoring Console</h1>
-                </div>
-                <div class="flex items-center gap-8 text-[10px] font-medium uppercase tracking-widest text-slate-500">
-                    <div class="flex gap-2 items-baseline"><span class="text-slate-300">Transactions:</span> <span class="text-blue-400 font-mono text-sm" id="stat-txns">14.2K</span></div>
-                    <div class="flex gap-2 items-baseline"><span class="text-slate-300">Users:</span> <span class="text-blue-400 font-mono text-sm" id="stat-users">892</span></div>
-                    <div class="flex gap-2 items-baseline"><span class="text-slate-100">Alerts:</span> <span class="text-red-500 font-mono text-sm" id="stat-alerts">24</span></div>
-                    <div class="flex gap-2 items-baseline"><span class="text-slate-300">Latency:</span> <span class="text-blue-400 font-mono text-sm">12ms</span></div>
-                </div>
-                <div class="flex items-center gap-4 text-slate-400">
-                    <button class="p-1 hover:text-white"><i data-lucide="plus-circle" class="w-5 h-5"></i></button>
-                    <button class="p-1 hover:text-white"><i data-lucide="bell" class="w-5 h-5"></i></button>
-                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs">A</div>
-                </div>
-            </header>
-
-            <!-- Dashboard Grid -->
-            <div class="flex-1 p-4 grid grid-cols-12 grid-rows-6 gap-4 overflow-hidden">
-                <!-- Suspicious Entities Table -->
-                <section class="col-span-3 row-span-4 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col overflow-hidden">
-                    <div class="p-3 border-b border-slate-800/50 flex justify-between items-center">
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                            <i data-lucide="alert-triangle" class="w-3 h-3 text-red-500"></i> Suspicious Entities
-                        </h2>
-                        <i data-lucide="maximize-2" class="w-3 h-3 text-slate-600"></i>
-                    </div>
-                    <div class="flex-1 overflow-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="sticky top-0 bg-[#08101C] text-[9px] uppercase tracking-wider text-slate-500 border-b border-slate-800/50">
-                                <tr>
-                                    <th class="p-3 font-medium">User ID</th>
-                                    <th class="p-3 font-medium text-right">Score</th>
-                                    <th class="p-3 font-medium text-right">Drift</th>
-                                </tr>
-                            </thead>
-                            <tbody id="suspicious-table-body" class="text-[11px] font-mono">
-                                <!-- Dynamic Content -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- Behavior Graph -->
-                <section class="col-span-6 row-span-4 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col relative overflow-hidden">
-                    <div class="p-3 border-b border-slate-800/50 flex justify-between items-center z-10 bg-[#08101C]/90">
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                            <i data-lucide="share-2" class="w-3 h-3 text-blue-400"></i> Behavior Graph
-                        </h2>
-                        <div class="flex gap-4 text-[9px] uppercase tracking-widest font-bold">
-                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span> Suspicious</span>
-                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Neutral</span>
-                        </div>
-                    </div>
-                    <div id="cy" class="flex-1 w-full h-full"></div>
-                    <div id="graph-overlay" class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-300">
-                        <div class="px-4 py-2 bg-red-500/10 border border-red-500/50 rounded text-red-500 text-[10px] font-bold uppercase tracking-widest animate-pulse">
-                            High Risk Cluster Detected
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Alert Stream -->
-                <section class="col-span-3 row-span-6 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col overflow-hidden">
-                    <div class="p-3 border-b border-slate-800/50 flex justify-between items-center bg-[#08101C]">
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                            <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Alert Stream
-                        </h2>
-                    </div>
-                    <div id="alert-stream" class="flex-1 overflow-auto p-2 flex flex-col gap-2">
-                        <!-- Dynamic Alerts -->
-                    </div>
-                    <div class="p-3 border-t border-slate-800/50 bg-[#08101C]/50">
-                        <button class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-[9px] font-bold uppercase tracking-widest rounded transition-colors">View Alert History</button>
-                    </div>
-                </section>
-
-                <!-- Temporal Analysis -->
-                <section class="col-span-9 row-span-2 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col overflow-hidden">
-                    <div class="px-3 py-2 border-b border-slate-800/50 flex justify-between items-center bg-[#08101C]">
-                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                            <i data-lucide="clock" class="w-3 h-3 text-blue-400"></i> Temporal Analysis
-                        </h2>
-                        <div class="flex gap-4 text-[9px] font-medium text-slate-500 overflow-x-auto">
-                            <button class="text-blue-400 border-b border-blue-400 pb-0.5 px-2">Shadow_Score</button>
-                            <button class="hover:text-slate-300 px-2">Drift</button>
-                            <button class="hover:text-slate-300 px-2">Burst</button>
-                            <button class="hover:text-slate-300 px-2">Coordination</button>
-                        </div>
-                    </div>
-                    <div class="flex-1 p-4 pt-1">
-                        <canvas id="temporalChart"></canvas>
-                    </div>
-                </section>
-            </div>
-        </main>
+<!-- Alert History Modal -->
+<div id="history-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Alert History</span>
+            <button id="close-modal-btn" class="modal-close-btn" aria-label="Close">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div id="modal-alert-list" class="modal-body"></div>
     </div>
+</div>
 
-    <!-- UI Interaction Overlay -->
-    <div id="loader" class="fixed inset-0 bg-[#050B15] z-50 flex items-center justify-center transition-opacity duration-1000 pointer-events-none">
-        <div class="flex flex-col items-center gap-4">
-            <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-            <div class="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-400 animate-pulse">Initializing ShadowScore Engine</div>
+<!-- Inject Fraud Modal -->
+<div id="inject-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:400px">
+        <div class="modal-header">
+            <span class="modal-title" style="color:#EF4444">⚠ Inject Fraud Burst</span>
+            <button id="close-inject-btn" class="modal-close-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:12px;margin-bottom:16px;opacity:0.7">Choose a fraud cluster to simulate a coordinated burst attack.</p>
+            <div style="display:flex;flex-direction:column;gap:10px">
+                <button class="inject-cluster-btn" data-cluster="A" id="inject-a">Cluster A — ACC-1001, ACC-1002, ACC-1003</button>
+                <button class="inject-cluster-btn" data-cluster="B" id="inject-b">Cluster B — ACC-2001, ACC-2002, ACC-2004</button>
+                <button class="inject-cluster-btn" data-cluster="C" id="inject-c">Cluster C — ACC-3001, ACC-3005, ACC-3009</button>
+            </div>
+            <div id="inject-result" style="margin-top:14px;font-size:11px;opacity:0;transition:opacity 0.3s"></div>
         </div>
     </div>
+</div>
 
-    <script src="app.js"></script>
+<div class="layout-root">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <i data-lucide="shield-check" class="w-7 h-7"></i>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" id="nav-dashboard" title="Dashboard">
+                <i data-lucide="layout-dashboard"></i>
+            </a>
+            <a href="#" class="nav-item" id="nav-entities" title="Entities">
+                <i data-lucide="users"></i>
+            </a>
+            <a href="#" class="nav-item" id="nav-graph" title="Graph">
+                <i data-lucide="network"></i>
+            </a>
+            <a href="#" class="nav-item" id="nav-alerts" title="Alerts">
+                <i data-lucide="bell"></i>
+                <span class="nav-badge" id="nav-alert-count">0</span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <button class="nav-item theme-toggle-btn" id="theme-toggle-btn" title="Toggle Theme">
+                <i data-lucide="sun" id="theme-icon"></i>
+            </button>
+            <a href="#" class="nav-item" title="Settings"><i data-lucide="settings"></i></a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <h1 class="header-title">Precision Fraud Monitoring Console</h1>
+                <div class="live-badge">
+                    <span class="live-dot"></span> LIVE
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Transactions</span>
+                    <span class="stat-value" id="stat-txns">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Entities</span>
+                    <span class="stat-value" id="stat-users">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Alerts</span>
+                    <span class="stat-value danger" id="stat-alerts">—</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">API</span>
+                    <span class="stat-value" id="stat-api-status">Connecting…</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="inject-fraud-btn" title="Inject Fraud Burst">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                </button>
+                <button class="icon-btn" id="refresh-btn" title="Refresh Now">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                </button>
+                <div class="avatar">SS</div>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid" id="dashboard-view">
+            <!-- Suspicious Entities Table -->
+            <section class="card col-span-3 row-span-4 flex-col" id="entities-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="alert-triangle" class="w-3 h-3 text-red-500"></i>
+                        Suspicious Entities
+                    </h2>
+                    <span class="badge-count" id="entities-count">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Entity ID</th>
+                                <th class="text-right">Score</th>
+                                <th class="text-right">Level</th>
+                                <th class="text-right">Drift</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suspicious-table-body">
+                            <tr><td colspan="4" class="empty-row">Waiting for data…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Behavior Graph -->
+            <section class="card col-span-6 row-span-4 flex-col relative" id="graph-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="share-2" class="w-3 h-3" style="color:var(--accent-blue)"></i>
+                        Coordination Graph
+                    </h2>
+                    <div class="graph-legend">
+                        <span class="legend-item"><span class="dot red"></span>Critical</span>
+                        <span class="legend-item"><span class="dot amber"></span>High</span>
+                        <span class="legend-item"><span class="dot blue"></span>Normal</span>
+                    </div>
+                </div>
+                <div id="cy" class="graph-container"></div>
+                <div id="graph-overlay" class="graph-overlay">
+                    <div class="graph-overlay-badge">⚠ High Risk Cluster Detected</div>
+                </div>
+            </section>
+
+            <!-- Alert Stream -->
+            <section class="card col-span-3 row-span-6 flex-col" id="alerts-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="zap" class="w-3 h-3" style="color:#F59E0B"></i>
+                        Alert Stream
+                    </h2>
+                    <span class="badge-count danger" id="alert-count-badge">0</span>
+                </div>
+                <div id="alert-stream" class="alert-stream-body"></div>
+                <div class="card-footer">
+                    <button class="footer-btn" id="view-history-btn">
+                        <i data-lucide="clock" class="w-3 h-3"></i> View Alert History
+                    </button>
+                </div>
+            </section>
+
+            <!-- Temporal Analysis -->
+            <section class="card col-span-9 row-span-2 flex-col" id="chart-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="trending-up" class="w-3 h-3" style="color:var(--accent-blue)"></i>
+                        Temporal Analysis
+                    </h2>
+                    <div class="chart-tabs" id="chart-tabs">
+                        <button class="chart-tab active" data-metric="shadow_score" id="tab-shadow">Shadow Score</button>
+                        <button class="chart-tab" data-metric="drift" id="tab-drift">Drift</button>
+                        <button class="chart-tab" data-metric="burst" id="tab-burst">Burst</button>
+                        <button class="chart-tab" data-metric="coord" id="tab-coord">Coordination</button>
+                    </div>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="temporalChart"></canvas>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
