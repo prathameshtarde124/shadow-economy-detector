@@ -1,0 +1,82 @@
+:root {
+    --bg-dark: #050B15;
+    --card-bg: #08101C;
+    --sidebar-bg: #02060C;
+    --accent-blue: #3B82F6;
+    --accent-red: #EF4444;
+    --border-color: rgba(30, 41, 59, 0.5);
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Custom Table Shadows & Gradients */
+table tr:hover {
+    background: rgba(59, 130, 246, 0.03);
+}
+
+.shadow-score-bar {
+    height: 3px;
+    background: #1E293B;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.shadow-score-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Alert Card Styles */
+.alert-card {
+    border-left: 3px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.alert-card:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    transform: translateX(4px);
+}
+
+.alert-critical { border-left-color: #EF4444; background: rgba(239, 68, 68, 0.08); }
+.alert-warning { border-left-color: #F59E0B; background: rgba(245, 158, 11, 0.06); }
+.alert-elevated { border-left-color: #10B981; background: rgba(16, 185, 129, 0.04); }
+
+/* Animation Keyframes */
+@keyframes glow {
+    0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+    100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2); }
+}
+
+.glow-blue {
+    animation: glow 3s infinite;
+}
+
+/* Cytoscape Container */
+#cy {
+    background: radial-gradient(circle at center, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+}
+
+canvas {
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.1));
+}

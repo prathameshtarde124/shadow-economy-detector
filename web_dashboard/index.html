@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowScore | Precision Fraud Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#050B15] text-slate-300 font-['Inter'] overflow-hidden">
+    <div class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside class="w-16 border-r border-slate-800/50 flex flex-col items-center py-6 gap-8 bg-[#02060C]">
+            <div class="p-2 bg-blue-600/10 rounded-lg text-blue-500 mb-4">
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
+            </div>
+            <nav class="flex flex-col gap-6 text-slate-500">
+                <a href="#" class="p-2 hover:text-blue-400 transition-colors text-blue-500 border-l-2 border-blue-500 bg-blue-500/5"><i data-lucide="layout-dashboard"></i></a>
+                <a href="#" class="p-2 hover:text-blue-400 transition-colors"><i data-lucide="users"></i></a>
+                <a href="#" class="p-2 hover:text-blue-400 transition-colors"><i data-lucide="activity"></i></a>
+                <a href="#" class="p-2 hover:text-blue-400 transition-colors"><i data-lucide="network"></i></a>
+            </nav>
+            <div class="mt-auto flex flex-col gap-6 text-slate-600">
+                <a href="#" class="p-2 hover:text-slate-300"><i data-lucide="settings"></i></a>
+                <a href="#" class="p-2 hover:text-slate-300"><i data-lucide="log-out"></i></a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0">
+            <!-- Top Header -->
+            <header class="h-14 border-b border-slate-800/50 flex items-center px-6 justify-between bg-[#02060C]">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-xs font-bold uppercase tracking-[0.2em] text-blue-400">Precision Fraud Monitoring Console</h1>
+                </div>
+                <div class="flex items-center gap-8 text-[10px] font-medium uppercase tracking-widest text-slate-500">
+                    <div class="flex gap-2 items-baseline"><span class="text-slate-300">Transactions:</span> <span class="text-blue-400 font-mono text-sm" id="stat-txns">14.2K</span></div>
+                    <div class="flex gap-2 items-baseline"><span class="text-slate-300">Users:</span> <span class="text-blue-400 font-mono text-sm" id="stat-users">892</span></div>
+                    <div class="flex gap-2 items-baseline"><span class="text-slate-100">Alerts:</span> <span class="text-red-500 font-mono text-sm" id="stat-alerts">24</span></div>
+                    <div class="flex gap-2 items-baseline"><span class="text-slate-300">Latency:</span> <span class="text-blue-400 font-mono text-sm">12ms</span></div>
+                </div>
+                <div class="flex items-center gap-4 text-slate-400">
+                    <button class="p-1 hover:text-white"><i data-lucide="plus-circle" class="w-5 h-5"></i></button>
+                    <button class="p-1 hover:text-white"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs">A</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Grid -->
+            <div class="flex-1 p-4 grid grid-cols-12 grid-rows-6 gap-4 overflow-hidden">
+                <!-- Suspicious Entities Table -->
+                <section class="col-span-3 row-span-4 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col overflow-hidden">
+                    <div class="p-3 border-b border-slate-800/50 flex justify-between items-center">
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-3 h-3 text-red-500"></i> Suspicious Entities
+                        </h2>
+                        <i data-lucide="maximize-2" class="w-3 h-3 text-slate-600"></i>
+                    </div>
+                    <div class="flex-1 overflow-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 bg-[#08101C] text-[9px] uppercase tracking-wider text-slate-500 border-b border-slate-800/50">
+                                <tr>
+                                    <th class="p-3 font-medium">User ID</th>
+                                    <th class="p-3 font-medium text-right">Score</th>
+                                    <th class="p-3 font-medium text-right">Drift</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suspicious-table-body" class="text-[11px] font-mono">
+                                <!-- Dynamic Content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Behavior Graph -->
+                <section class="col-span-6 row-span-4 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col relative overflow-hidden">
+                    <div class="p-3 border-b border-slate-800/50 flex justify-between items-center z-10 bg-[#08101C]/90">
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i data-lucide="share-2" class="w-3 h-3 text-blue-400"></i> Behavior Graph
+                        </h2>
+                        <div class="flex gap-4 text-[9px] uppercase tracking-widest font-bold">
+                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span> Suspicious</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Neutral</span>
+                        </div>
+                    </div>
+                    <div id="cy" class="flex-1 w-full h-full"></div>
+                    <div id="graph-overlay" class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-300">
+                        <div class="px-4 py-2 bg-red-500/10 border border-red-500/50 rounded text-red-500 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+                            High Risk Cluster Detected
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Alert Stream -->
+                <section class="col-span-3 row-span-6 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col overflow-hidden">
+                    <div class="p-3 border-b border-slate-800/50 flex justify-between items-center bg-[#08101C]">
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Alert Stream
+                        </h2>
+                    </div>
+                    <div id="alert-stream" class="flex-1 overflow-auto p-2 flex flex-col gap-2">
+                        <!-- Dynamic Alerts -->
+                    </div>
+                    <div class="p-3 border-t border-slate-800/50 bg-[#08101C]/50">
+                        <button class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-[9px] font-bold uppercase tracking-widest rounded transition-colors">View Alert History</button>
+                    </div>
+                </section>
+
+                <!-- Temporal Analysis -->
+                <section class="col-span-9 row-span-2 bg-[#08101C]/80 border border-slate-800/50 rounded flex flex-col overflow-hidden">
+                    <div class="px-3 py-2 border-b border-slate-800/50 flex justify-between items-center bg-[#08101C]">
+                        <h2 class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i data-lucide="clock" class="w-3 h-3 text-blue-400"></i> Temporal Analysis
+                        </h2>
+                        <div class="flex gap-4 text-[9px] font-medium text-slate-500 overflow-x-auto">
+                            <button class="text-blue-400 border-b border-blue-400 pb-0.5 px-2">Shadow_Score</button>
+                            <button class="hover:text-slate-300 px-2">Drift</button>
+                            <button class="hover:text-slate-300 px-2">Burst</button>
+                            <button class="hover:text-slate-300 px-2">Coordination</button>
+                        </div>
+                    </div>
+                    <div class="flex-1 p-4 pt-1">
+                        <canvas id="temporalChart"></canvas>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- UI Interaction Overlay -->
+    <div id="loader" class="fixed inset-0 bg-[#050B15] z-50 flex items-center justify-center transition-opacity duration-1000 pointer-events-none">
+        <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+            <div class="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-400 animate-pulse">Initializing ShadowScore Engine</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
