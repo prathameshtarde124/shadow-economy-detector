@@ -142,10 +142,17 @@ async def get_alerts(min_level: str = "ELEVATED"):
     }
 
 
-@app.get("/graph")
-async def get_graph():
-    """Return coordination graph for visualisation."""
-    return engine.get_edge_graph()
+@app.get("/stats")
+async def get_stats():
+    """Return real-time engine statistics."""
+    return {
+        "total_transactions": len(engine.txn_log),
+        "total_entities":     len(engine.states),
+        "total_alerts":       len(engine.alerts),
+        "uptime_sec":         round(time.time() - START_TIME, 1)
+    }
+
+START_TIME = time.time()
 
 
 @app.post("/inject-fraud")
